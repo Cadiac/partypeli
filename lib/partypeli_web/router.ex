@@ -13,11 +13,11 @@ defmodule PartypeliWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", PartypeliWeb do
-    pipe_through :browser # Use the default browser stack
+  # scope "/", PartypeliWeb do
+  #   pipe_through :browser # Use the default browser stack
 
-    get "/", PageController, :index
-  end
+  #   get "/", PageController, :index
+  # end
 
   # Other scopes may use custom stacks.
   # scope "/api", PartypeliWeb do
