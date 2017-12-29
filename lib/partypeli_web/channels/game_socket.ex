@@ -1,8 +1,8 @@
-defmodule PartypeliWeb.UserSocket do
+defmodule PartypeliWeb.GameSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", PartypeliWeb.RoomChannel
+  channel "game:lobby", PartypeliWeb.LobbyChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
