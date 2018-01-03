@@ -1,14 +1,18 @@
 defmodule Partypeli.Game.EventHandler do
-  use GenEvent
+  use GenServer
+  require Logger
   alias PartypeliWeb.LobbyChannel
 
-  def handle_event(:game_created, state), do: broadcast_update(state)
-  def handle_event(:player_connected, state), do: broadcast_update(state)
-  def handle_event(_, state), do: {:ok, state}
+  def handle_cast(:game_created, state), do: broadcast_update(state)
+  def handle_cast(:player_connected, state), do: broadcast_update(state)
+  def handle_cast(event, state) do
+    Logger.warn "EventHandler: Unmatched event #{event}"
+    {:noreply, state}
+  end
 
   defp broadcast_update(state) do
     LobbyChannel.broadcast_current_games
 
-    {:ok, state}
+    {:noreply, state}
   end
 end

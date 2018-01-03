@@ -5,7 +5,7 @@ defmodule Partypeli.Game.Supervisor do
   require Logger
 
   use Supervisor
-  alias Partypeli.{Game}
+  alias Partypeli.Game
 
   def start_link, do: Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
 

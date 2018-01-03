@@ -35,7 +35,7 @@ defmodule Partypeli.Game do
   # SERVER
 
   def init(id) do
-    Partypeli.Game.Event.game_created
+    # Partypeli.Game.EventManager.game_created
 
     {:ok, %__MODULE__{id: id}}
   end
@@ -54,7 +54,7 @@ defmodule Partypeli.Game do
 
         game = add_player(game, player_id)
 
-        Partypeli.Game.Event.player_connected
+        # Partypeli.Game.EventManager.player_connected
 
         {:reply, {:ok, self()}, game}
     end
@@ -65,7 +65,7 @@ defmodule Partypeli.Game do
 
     game = remove_player(game, player_id)
 
-    Partypeli.Game.Event.player_disconnected
+    # Partypeli.Game.EventManager.player_disconnected
 
     {:reply, {:ok, game}, game}
   end

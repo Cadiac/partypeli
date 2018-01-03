@@ -14,7 +14,7 @@ defmodule Partypeli.Application do
       supervisor(PartypeliWeb.Endpoint, []),
       # Start the game supervisor and event handler
       supervisor(Partypeli.Game.Supervisor, []),
-      worker(Partypeli.Game.Event, [])
+      supervisor(Partypeli.Game.EventManager, [])
       # Start your own worker by calling: Partypeli.Worker.start_link(arg1, arg2, arg3)
       # worker(Partypeli.Worker, [arg1, arg2, arg3]),
     ]
