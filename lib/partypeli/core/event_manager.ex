@@ -35,7 +35,11 @@ defmodule Partypeli.Game.EventManager do
     :ok
   end
 
+  # LobbyChannel
   def game_created, do: notify(__MODULE__, :game_created)
-  def player_connected, do: notify(__MODULE__, :player_connected)
-  def player_disconnected, do: notify(__MODULE__, :player_disconnected)
+
+  # GameChannel
+  def player_connected(game_id, player), do: notify(__MODULE__, {:player_connected, {game_id, player}})
+  def player_disconnected(game_id), do: notify(__MODULE__, {:player_disconnected, game_id})
+  def game_stopped(game_id), do: notify(__MODULE__, {:game_stopped, game_id})
 end

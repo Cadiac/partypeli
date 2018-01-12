@@ -5,9 +5,12 @@ defmodule Partypeli.Game do
   use GenServer
   require Logger
 
+  alias Partypeli.Game.Player
+
   defstruct [
     id: nil,
-    players: []
+    players: %{}
+    max_players: 8
   ]
 
   # API
@@ -19,7 +22,7 @@ defmodule Partypeli.Game do
   @doc """
   Called when a player joins the game
   """
-  def player_connected(id, player_id, pid), do: try_call(id, {:player_connected, player_id, pid})
+  def player_connected(id, player_id, username, pid), do: try_call(id, {:player_connected, player_id, username, pid})
 
   @doc """
   Called when a player leaves the game
@@ -32,29 +35,40 @@ defmodule Partypeli.Game do
   """
   def get_data(id), do: try_call(id, :get_data)
 
+  @doc """
+  Returns the game's state for a given player. This could hide part of the state for the player.
+  """
+  def get_data(id, player_id), do: try_call(id, {:get_data, player_id})
+
   # SERVER
 
   def init(id) do
-    # Partypeli.Game.EventManager.game_created
+    Partypeli.Game.EventManager.game_created
 
     {:ok, %__MODULE__{id: id}}
   end
 
   def handle_call(:get_data, _from, game), do: {:reply, game, game}
+  def handle_call({:get_data, player_id}, _from, game) do
+    Logger.debug "Handling :get_data for player #{player_id} in Game #{game.id}"
 
-  def handle_call({:player_connected, player_id, pid}, _from, game) do
+    {:reply, game, game}
+  end
+
+  def handle_call({:player_connected, player_id, username, pid}, _from, game) do
     Logger.debug "Handling :join for #{player_id} in Game #{game.id}"
 
     cond do
-      Enum.member?(game.players, player_id) ->
+      Map.has_key?(game.players, player_id) ->
         {:reply, {:ok, self()}, game}
       true ->
         Process.flag(:trap_exit, true)
         Process.monitor(pid)
 
-        game = add_player(game, player_id)
+        player = Player.create(player_id, username)
 
-        # Partypeli.Game.EventManager.player_connected
+        game = add_player(game, player_id)
+        Partypeli.Game.EventManager.player_connected(game.id, player)
 
         {:reply, {:ok, self()}, game}
     end
@@ -65,7 +79,7 @@ defmodule Partypeli.Game do
 
     game = remove_player(game, player_id)
 
-    # Partypeli.Game.EventManager.player_disconnected
+    Partypeli.Game.EventManager.player_disconnected(game.id)
 
     {:reply, {:ok, game}, game}
   end
@@ -96,9 +110,9 @@ defmodule Partypeli.Game do
   # Generates global reference
   defp ref(id), do: {:global, {:game, id}}
 
-  defp add_player(%__MODULE__{players: players} = game, player_id), do: %{game | players: [player_id | players]}
+  defp add_player(%__MODULE__{players: players} = game, %Player{} = player), do: %{game | players: Map.put(players, player.id, player)}
 
-  defp remove_player(%__MODULE__{players: players} = game, player_id), do: %{game | players: List.delete(players, player_id)}
+  defp remove_player(%__MODULE__{players: players} = game, player_id), do: %{game | players: Map.delete(players, player_id)}
 
   defp try_call(id, message) do
     case GenServer.whereis(ref(id)) do

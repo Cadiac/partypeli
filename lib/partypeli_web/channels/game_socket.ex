@@ -23,10 +23,9 @@ defmodule PartypeliWeb.GameSocket do
   #
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
-  def connect(%{"id" => player_id}, socket) do
-    {:ok, assign(socket, :player_id, player_id)}
+  def connect(_, socket) do
+    {:ok, assign(socket, :player_id, Ecto.UUID.generate)}
   end
-  def connect(_, _socket), do: :error
 
   # Socket id's are topics that allow you to identify all sockets for a given user:
   #

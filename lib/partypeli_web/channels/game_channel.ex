@@ -8,12 +8,12 @@ defmodule PartypeliWeb.GameChannel do
   alias Partypeli.Game.Supervisor, as: GameSupervisor
   require Logger
 
-  def join("game:" <> game_id, _message, socket) do
-    Logger.debug "Joining Game channel #{game_id}", game_id: game_id
+  def join("game:" <> game_id, %{"username" => username}, socket) do
+    Logger.debug "#{username} is joining Game channel #{game_id}", game_id: game_id
 
     player_id = socket.assigns.player_id
 
-    case Game.player_connected(game_id, player_id, socket.channel_pid) do
+    case Game.player_connected(game_id, player_id, username, socket.channel_pid) do
       {:ok, pid} ->
         Process.monitor(pid)
 
@@ -23,19 +23,15 @@ defmodule PartypeliWeb.GameChannel do
     end
   end
 
-  def handle_in("game:joined", _message, socket) do
-    Logger.debug "Broadcasting player joined #{socket.assigns.game_id}"
-
-    player_id = socket.assigns.player_id
-
-    broadcast!(socket, "game:player_joined", %{player_id: player_id})
-    {:noreply, socket}
+  def join("game:" <> _game_id, _params, _socket) do
+    {:error, %{reason: "unauthorized"}}
   end
 
   def handle_in("game:get_data", _message, socket) do
     game_id = socket.assigns.game_id
+    player_id = socket.assigns.player_id
 
-    data = Game.get_data(game_id)
+    data = Game.get_data(game_id, player_id)
 
     {:reply, {:ok, %{game: data}}, socket}
   end
@@ -58,8 +54,7 @@ defmodule PartypeliWeb.GameChannel do
     game_id = socket.assigns.game_id
 
     case Game.player_disconnected(game_id, player_id) do
-      {:ok, game} ->
-
+      {:ok, _game} ->
         GameSupervisor.stop_game(game_id)
 
         broadcast(socket, "game:player_disconnected", %{player_id: player_id})
@@ -76,5 +71,11 @@ defmodule PartypeliWeb.GameChannel do
     Logger.debug "Broadcasting game:stopped from GameChannel #{game_id}"
 
     PartypeliWeb.Endpoint.broadcast("game:#{game_id}", "game:stopped", %{})
+  end
+
+  def broadcast_player_connected(game_id, player) do
+    Logger.debug "Broadcasting game:player_connected GameChannel #{game_id}"
+
+    PartypeliWeb.Endpoint.broadcast("game:#{game_id}", "game:player_connected", %{player: player})
   end
 end

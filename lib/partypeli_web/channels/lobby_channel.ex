@@ -15,7 +15,7 @@ defmodule PartypeliWeb.LobbyChannel do
     {:reply, {:ok, %{games: GameSupervisor.current_games}}, socket}
   end
 
-  def handle_in("new_game", _params, socket) do
+  def handle_in("create_game", _params, socket) do
     game_id = Partypeli.Utils.generate_game_id
     GameSupervisor.create_game(game_id)
 
