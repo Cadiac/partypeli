@@ -9,7 +9,7 @@ defmodule Partypeli.Game do
 
   defstruct [
     id: nil,
-    players: %{}
+    players: %{},
     max_players: 8
   ]
 
@@ -67,7 +67,7 @@ defmodule Partypeli.Game do
 
         player = Player.create(player_id, username)
 
-        game = add_player(game, player_id)
+        game = add_player(game, player)
         Partypeli.Game.EventManager.player_connected(game.id, player)
 
         {:reply, {:ok, self()}, game}

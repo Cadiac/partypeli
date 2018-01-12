@@ -17,7 +17,9 @@ defmodule PartypeliWeb.GameChannel do
       {:ok, pid} ->
         Process.monitor(pid)
 
-        {:ok, assign(socket, :game_id, game_id)}
+        data = Game.get_data(game_id, player_id)
+
+        {:ok, %{game: data}, assign(socket, :game_id, game_id)}
       {:error, reason} ->
         {:error, %{reason: reason}}
     end
