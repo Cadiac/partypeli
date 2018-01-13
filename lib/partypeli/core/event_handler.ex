@@ -14,8 +14,8 @@ defmodule Partypeli.Game.EventHandler do
     {:noreply, state}
   end
 
-  def handle_cast({:player_disconnected, game_id}, state) do
-    GameChannel.broadcast_stop(game_id)
+  def handle_cast({:player_disconnected, {game_id, player}}, state) do
+    GameChannel.broadcast_player_disconnected(game_id, player)
     {:noreply, state}
   end
 

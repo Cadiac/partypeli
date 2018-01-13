@@ -57,7 +57,7 @@ defmodule PartypeliWeb.GameChannel do
 
     case Game.player_disconnected(game_id, player_id) do
       {:ok, _game} ->
-        GameSupervisor.stop_game(game_id)
+        # GameSupervisor.stop_game(game_id)
 
         broadcast(socket, "game:player_disconnected", %{player_id: player_id})
 
@@ -79,5 +79,11 @@ defmodule PartypeliWeb.GameChannel do
     Logger.debug "Broadcasting game:player_connected GameChannel #{game_id}"
 
     PartypeliWeb.Endpoint.broadcast("game:#{game_id}", "game:player_connected", %{player: player})
+  end
+
+  def broadcast_player_disconnected(game_id, player) do
+    Logger.debug "Broadcasting game:player_connected GameChannel #{game_id}"
+
+    PartypeliWeb.Endpoint.broadcast("game:#{game_id}", "game:player_disconnected", %{player: player})
   end
 end
