@@ -38,6 +38,14 @@ defmodule PartypeliWeb.GameChannel do
     {:reply, {:ok, %{game: data}}, socket}
   end
 
+  def handle_in("game:get_players", _message, socket) do
+    game_id = socket.assigns.game_id
+
+    players = Game.get_players(game_id)
+
+    {:reply, {:ok, %{players: players}}, socket}
+  end
+
   def handle_in("game:send_message", %{"text" => text}, socket) do
     Logger.debug "Handling send_message on GameChannel #{socket.assigns.game_id}"
 

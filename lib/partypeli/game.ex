@@ -40,6 +40,11 @@ defmodule Partypeli.Game do
   """
   def get_data(id, player_id), do: try_call(id, {:get_data, player_id})
 
+  @doc """
+  Returns the list of current players.
+  """
+  def get_players(id), do: try_call(id, :get_players)
+
   # SERVER
 
   def init(id) do
@@ -54,6 +59,8 @@ defmodule Partypeli.Game do
 
     {:reply, game, game}
   end
+
+  def handle_call(:get_players, _from, %{players: players} = game), do: {:reply, players, game}
 
   def handle_call({:player_connected, player_id, username, pid}, _from, game) do
     Logger.debug "Handling :join for #{player_id} in Game #{game.id}"
