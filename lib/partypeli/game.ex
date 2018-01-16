@@ -26,7 +26,6 @@ defmodule Partypeli.Game do
 
   @doc """
   Called when a player leaves the game
-  TODO: How is this called?
   """
   def player_disconnected(id, player_id), do: try_call(id, {:player_disconnected, player_id})
 
@@ -68,6 +67,8 @@ defmodule Partypeli.Game do
     cond do
       Map.has_key?(game.players, player_id) ->
         {:reply, {:ok, self()}, game}
+      Enum.count(game.players) == game.max_players ->
+        {:reply, {:error, self()}, "Game is full"}
       true ->
         Process.flag(:trap_exit, true)
         Process.monitor(pid)
@@ -96,8 +97,7 @@ defmodule Partypeli.Game do
   stopping the game process.
   """
   def handle_info({:DOWN, _ref, :process, _pid, _reason} = message, game) do
-    Logger.debug "Handling message in Game #{game.id}"
-    Logger.debug "#{inspect message}"
+    Logger.debug "Handling #{inspect message} in Game #{game.id}"
 
     {:stop, :normal, game}
   end
