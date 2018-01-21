@@ -57,6 +57,17 @@ defmodule PartypeliWeb.GameChannel do
     {:noreply, socket}
   end
 
+  def handle_in("game:change_username", %{"username" => username}, socket) do
+    game_id = socket.assigns.game_id
+    player_id = socket.assigns.player_id
+
+    player = Game.player_changed_username(game_id, player_id, username)
+
+    broadcast! socket, "game:player_changed_username", %{player: player}
+
+    {:noreply, socket}
+  end
+
   def terminate(reason, socket) do
     Logger.debug"Terminating GameChannel #{socket.assigns.game_id} #{inspect reason}"
 
@@ -65,17 +76,16 @@ defmodule PartypeliWeb.GameChannel do
 
     case Game.player_disconnected(game_id, player_id) do
       {:ok, _game} ->
-        # GameSupervisor.stop_game(game_id)
-
-        broadcast(socket, "game:player_disconnected", %{player_id: player_id})
-
         :ok
       _ ->
+        Logger.warn "Player disconnected from nonexisting game #{game_id}"
         :ok
     end
   end
 
   def handle_info(_, socket), do: {:noreply, socket}
+
+  # Broadcast messages
 
   def broadcast_stop(game_id) do
     Logger.debug "Broadcasting game:stopped from GameChannel #{game_id}"
@@ -90,8 +100,14 @@ defmodule PartypeliWeb.GameChannel do
   end
 
   def broadcast_player_disconnected(game_id, player) do
-    Logger.debug "Broadcasting game:player_connected GameChannel #{game_id}"
+    Logger.debug "Broadcasting game:player_disconnected GameChannel #{game_id}"
 
     PartypeliWeb.Endpoint.broadcast("game:#{game_id}", "game:player_disconnected", %{player: player})
+  end
+
+  def broadcast_player_changed_username(game_id, player) do
+    Logger.debug "Broadcasting game:player_changed_username GameChannel #{game_id}"
+
+    PartypeliWeb.Endpoint.broadcast("game:#{game_id}", "game:player_changed_username", %{player: player})
   end
 end

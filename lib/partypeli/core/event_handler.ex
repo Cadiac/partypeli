@@ -22,7 +22,7 @@ defmodule Partypeli.Game.EventHandler do
   def handle_cast(:game_created, state), do: broadcast_channel(state)
 
   def handle_cast(event, state) do
-    Logger.warn "EventHandler: Unmatched event #{event}"
+    Logger.warn "EventHandler: Unmatched event #{inspect event}"
 
     {:noreply, state}
   end

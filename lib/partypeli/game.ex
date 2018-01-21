@@ -30,6 +30,11 @@ defmodule Partypeli.Game do
   def player_disconnected(id, player_id), do: try_call(id, {:player_disconnected, player_id})
 
   @doc """
+  Called when a player changes username
+  """
+  def player_changed_username(id, player_id, username), do: try_call(id, {:player_changed_username, player_id, username})
+
+  @doc """
   Returns the game's state
   """
   def get_data(id), do: try_call(id, :get_data)
@@ -85,11 +90,21 @@ defmodule Partypeli.Game do
   def handle_call({:player_disconnected, player_id}, _from, game) do
     Logger.debug "Handling :player_disconnected for #{player_id} in Game #{game.id}"
 
+    player = find_player(game, player_id)
     game = remove_player(game, player_id)
 
-    Partypeli.Game.EventManager.player_disconnected(game.id)
+    Partypeli.Game.EventManager.player_disconnected(game.id, player)
 
     {:reply, {:ok, game}, game}
+  end
+
+  def handle_call({:player_changed_username, player_id, username}, _from, game) do
+    Logger.debug "Handling :player_changed_username for #{player_id} in Game #{game.id}"
+
+    game = change_username(game, player_id, username)
+    player = find_player(game, player_id)
+
+    {:reply, player, game}
   end
 
   @doc """
@@ -99,7 +114,12 @@ defmodule Partypeli.Game do
   def handle_info({:DOWN, _ref, :process, _pid, _reason} = message, game) do
     Logger.debug "Handling #{inspect message} in Game #{game.id}"
 
-    {:stop, :normal, game}
+    cond do
+      Enum.empty? game.players ->
+        {:stop, :normal, game}
+      true ->
+        {:noreply, game}
+    end
   end
 
   # def handle_info({:EXIT, _pid, {:shutdown, :closed}}, game) do
@@ -117,9 +137,21 @@ defmodule Partypeli.Game do
   # Generates global reference
   defp ref(id), do: {:global, {:game, id}}
 
+  # Add player to game
   defp add_player(%__MODULE__{players: players} = game, %Player{} = player), do: %{game | players: Map.put(players, player.id, player)}
 
+  # Remove player from game permanently
   defp remove_player(%__MODULE__{players: players} = game, player_id), do: %{game | players: Map.delete(players, player_id)}
+
+  # Returns single player from game by id
+  defp find_player(%__MODULE__{players: players}, player_id), do: Map.fetch!(players, player_id)
+
+  # Changes the username of existing player
+  defp change_username(%__MODULE__{players: players} = game, player_id, username) do
+    %{game | players: Map.update!(players, player_id, fn player ->
+      %{player | username: username}
+    end)}
+  end
 
   defp try_call(id, message) do
     case GenServer.whereis(ref(id)) do
